@@ -8,13 +8,11 @@ current roasts
 import sqlite3 as lite
 import os
 import shutil
-
-# import arrow
 from datetime import datetime, timedelta
 import time
 
-rmDB = 'c:/users/kor/dropbox/apps/roastmaster/My Database.sqlite'
 
+# import arrow
 
 def get_choice():
     option_valid = False
@@ -30,11 +28,10 @@ def get_choice():
         return choice
 
 
-def check_db():
+def check_db(mydb):
     try:
 
-        metadata = os.stat(
-            'c:/users/kor/dropbox/apps/roastmaster/My Database.sqlite')
+        metadata = os.stat(mydb)
     except IOError:
         print("File does not exist. Correct the problem and restart.")
 
@@ -156,11 +153,18 @@ def show_coffee_list():
             temp3 = temp2.strftime("%a %b %d")
             temp4 = temp2.strftime("%a %b %d")
 
-            print(
+            if debug:
+                print(
                 "{0:26}{1:21}{2:15}{3}".format(date, each[0], each[2], each[3]))
+            else:
+                print(
+                    "{0:26}{1:15}{2}".format(date, each[2], each[3]))
+
 
         print('_' * 90)
 
 
-check_db()
+debug = False
+roastmaster_db = 'c:/users/kor/dropbox/apps/roastmaster/My Database.sqlite'
+check_db(roastmaster_db)
 show_coffee_list()
