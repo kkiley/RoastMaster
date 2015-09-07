@@ -9,10 +9,9 @@ import sqlite3 as lite
 import os
 import shutil
 from datetime import datetime, timedelta
-import time
 
+import arrow
 
-# import arrow
 
 def get_choice():
     option_valid = False
@@ -96,10 +95,8 @@ def show_coffee_list():
         # SELECT datetime( r.ZDATE, 'unixepoch', '31 YEARS', '+1 day',
         # 'localtime' ) AS Date,
 
-        sql = """
-            SELECT datetime( r.ZDATE, 'unixepoch', '31 YEARS', '+1 day',
-            'localtime' ) AS Date1,
-                   r.ZDATE AS Date2,
+        sql = """  Select
+                   r.ZDATE AS Date,
                    b.ZMARKETNAME AS [Market Name],
                    b.ZGRADE AS [Grade],
                    ( CAST ( CAST ( r.ZDURATION / 60.0 AS int )  AS string )
@@ -126,14 +123,18 @@ def show_coffee_list():
           """
 
         cur.execute(sql)
-        col_names = [cn[0] for cn in cur.description]
 
-        print(
-            "{0:<19} {1:21}{2:15}{3}".format(col_names[0],
-                                             col_names[1], col_names[2],
-                                             col_names[3]))
+        print('COFFEE MENU for:', arrow.now().format('dddd MMMM D'))
+        # col_names = [cn[0] for cn in cur.description]
 
-        print('_' * 90)
+
+
+        # print(
+        #     "{0:<19} {1:21}{2:15}{3}".format(col_names[0],
+        #                                      col_names[1], col_names[2],
+        #                                      col_names[3]))
+
+        print('_' * 60)
 
         # for each in (cur.fetchall()):
         #     for col in each:
@@ -144,24 +145,37 @@ def show_coffee_list():
         #     print()
         for each in (cur.fetchall()):
             temp = each[1]
-            temp = each[1] + epoch_delta.total_seconds()
-            date = time.ctime(temp)
+            # temp = datetime.fromtimestamp(each[1] +
+            # epoch_delta.total_seconds())
+            temp = arrow.Arrow.fromtimestamp(each[0])
+
+            # if debug:
+            #     print("Temp: ", type(temp))
+            # add 31 years to the iOS Core Date date which is seconds from
+            # 1/1/2001
+            date = temp.replace(years=31)
+            date = date.format('ddd MMM DD h:mm A')
+            # if debug:
+            #     print("Date: ", type(date))
+            #
+            #     print("The Date: ", date)
 
             # temp2 = datetime.strptime("Tue Aug 25 16:02:44 2015", "%a %b %d
             #  %H:%M:%S %Y")
-            temp2 = datetime.strptime(date, "%a %b %d %H:%M:%S %Y")
-            temp3 = temp2.strftime("%a %b %d")
-            temp4 = temp2.strftime("%a %b %d")
+            # temp2 = datetime.strptime(date, "%a %b %d %H:%M:%S %Y")
+            # temp3 = temp2.strftime("%a %b %d")
+            # temp4 = temp2.strftime("%a %b %d")
 
             if debug:
                 print(
-                "{0:26}{1:21}{2:15}{3}".format(date, each[0], each[2], each[3]))
+                    "{0:26}  {1:26}{2:15}{3}".format(each[1], each[0], each[2],
+                                                     each[3]))
             else:
+                # print(date, "   ", end='')
                 print(
-                    "{0:26}{1:15}{2}".format(date, each[2], each[3]))
+                    "{0:19} {1:10} {2}".format(date, each[1], each[2]))
 
-
-        print('_' * 90)
+        print('_' * 60)
 
 
 debug = False
