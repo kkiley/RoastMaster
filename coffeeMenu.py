@@ -1,3 +1,9 @@
+__author__ = 'Kor'
+
+"""
+This program will read from the Roastmaster database and output a menu of the
+current roasts
+"""
 
 import sqlite3 as lite
 import os
@@ -98,6 +104,7 @@ def create_report():
     subprocess.call(
         ['C:\Program Files (x86)\Adobe\Reader 11.0\Reader\AcroRD32.exe',
          pdf_file_name])
+
 
 def get_choice():
     option_valid = False
