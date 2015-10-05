@@ -189,62 +189,64 @@ def format_time(target_time):
 def show_coffee_list():
     con = lite.connect('D:/development/roastmaster/roast_master.db')
     f = open('temp.txt', "w")
+    time_span = -30
+    unix_epoch = '2001-01-01 00:00:00'
+    time_interval = arrow.now()
+    time_interval = time_interval.replace(years=0, days=time_span, hours=-5)
+    time_interval = time_interval.format('YYYY-MM-DD hh:mm:ss')
 
     with con:
-        # row_factory = lite.Row
+        con.row_factory = lite.Row
         cur = con.cursor()
-        # SELECT datetime( r.ZDATE, 'unixepoch', '31 YEARS', '+1 day',
-        # 'localtime' ) AS Date,
 
-        sql = """  SELECT r.zdate AS Date,
-                r.zduration as [Roast Duration],
-                rd.zname as [Roast Degree],
-                cu.zname as [Curve Type],
-                n.ztime as [Node Time],
-                n.zlevel as [Node Temp],
-                e.zeventtitle AS Event,
-                e.zeventtime AS [Time of Event],
-                r.zfirstcrack as [First Crack],
-                rt.zmanufacturer,
-                i.zamount,
-                b.zcountry,
-                co.zname
-              FROM ( ( ( zcurve cu
-                   JOIN znode n
-                     ON n.zcurve = cu.z_pk )
-                   JOIN zevent e
-                     ON e.zcurve = cu.z_pk )
-                   JOIN zroast r
-                     ON r.z_pk = cu.zroast )
-                   JOIN zroasteditem i
-                     ON r.z_pk = i.zroast
-                   JOIN zbean b
-                     ON b.z_pk = i.zbean
-                   JOIN zcountry co
-                     ON b.zcountry = co.z_pk
-                   JOIN zroastdegree rd
-                     ON rd.z_pk = r.zdegree
-                   JOIN zroaster rt
-                     ON rt.z_pk = r.zroaster
-             WHERE r.zdate >=( strftime( '%s', '2015-09-15 00:00:00 -05:00' )  - strftime( '%s',
-             '2001-01-01
-             00:00:00' )  )
-                   AND
-                   upper( cu.zname ) = 'BEAN TEMPERATURE'
-                   AND
-                   ( e.ztriggertype = 0
-                   OR
-                   e.ztriggertype = 2 )
-             ORDER BY zdate desc;
-
+        sql = """
+        SELECT r.zdate AS Date,
+               r.zduration AS [Roast Duration],
+               cu.zname AS [Curve Type],
+               n.ztime AS [Node Time],
+               n.zlevel AS [Node Temp],
+               e.zeventtitle AS Event,
+               e.zeventtime AS [Time of Event],
+               r.zfirstcrack AS [First Crack],
+               rt.zmanufacturer AS [Roaster Make],
+               i.zamount AS [Charge Weight],
+               b.zcountry AS [Country Pointer],
+               co.zname AS [Country]
+          FROM zcurve cu
+               JOIN zroast r
+                 ON r.z_pk = cu.zroast
+               JOIN zroasteditem i
+                 ON r.z_pk = i.zroast
+               JOIN znode n
+                 ON n.zcurve = cu.z_pk
+               JOIN zevent e
+                 ON e.zcurve = cu.z_pk
+               JOIN zbean b
+                 ON b.z_pk = i.zbean
+               JOIN zcountry co
+                 ON b.zcountry = co.z_pk
+               JOIN zroaster rt
+                 ON rt.z_pk = r.zroaster
+        WHERE r.zdate >=( strftime( '%s', ? )  - strftime( '%s', ? )  )
+--         WHERE r.zdate >=( strftime( '%s', '2015-09-15 00:00:00 -05:00' )  - strftime( '%s', '2001-01-01 00:00:00' )  )
+               AND
+               e.zeventtime IS NOT NULL
+               AND
+               cu.zname IN ('BT', 'Bean Temperature')
+               AND
+               ( e.ztriggertype = 0
+               OR
+               e.ztriggertype = 2 )
+--               AND e.zeventtitle IN ("Dry End", "Drying End")
+        ORDER BY zdate DESC;
           """
         previous_roast = ''
         roast = []
         oldtime = ''
-        new_time = False
+        # new_time = False
         begun = False
 
-        cur.execute(sql)
+        cur.execute(sql, (time_interval, unix_epoch))
 
         aline = arrow.now().format('dddd MMMM D') + ' ' * 20 + "Data to paste in Roastmaster"
         f.write(aline + '\n\n')
@@ -260,38 +262,44 @@ def show_coffee_list():
         # f.write(aline + '\n')
 
         print(
-            "{0:<17} {1:15} {2:13} {3:16} {4:10} {5:10} {6:11} {7}".format(col_names[0],
+            "0: {0:<17} 1: {1:15} 2: {2:13} 3: {3:16} 4: {4:10} 5: {5:10} 6: {6:11} 7: {7:} 8: {8:}"
+            "9: {9:}, 10: {10:} 11: {11:}".format(col_names[0],
                                                                            col_names[1],
                                                                            col_names[2],
                                                                            col_names[3],
                                                                            col_names[4],
                                                                            col_names[5],
                                                                            col_names[6],
-                                                                           col_names[7]))
+                                                                           col_names[7],
+                                        col_names[8], col_names[9], col_names[10], col_names[11]))
 
         print('_' * 140)
         aline = '_' * 40
         # f.write(aline + '\n')
-        dry_temp = 0.0
+        dry_time = 0.0
         dry_percent = 0.0
 
         for each in (cur.fetchall()):
 
+            # date = each[0]
+            # roast_duration = each[1]
+            # curve_type = each[2]
+            # node_time = each[3]
+            # node_temp = each[4]
+            # event = each[5]
+            # event_time = each[6]
+            # first_crack = each[7]
+            # roaster_brand = each[8]
+            # bean_amount = each[9]
+            # country_code = each[10]
+            # country = each[11]
+
+
             # UNIX epoch is 31 years and 1 day earlier than Code Data time
             # Format date():
-            temp = arrow.Arrow.fromtimestamp(each[0])
+            temp = arrow.Arrow.fromtimestamp(each["Date"])
             date = temp.replace(years=31, days=1)
-            date = date.format('YYYY-MM-DD HH:MM')
-            """each[0] r.zdate AS Date,
-               each[1] r.zduration as [Roast Duration],
-               each[2] rd.zname as [Roast Degree],
-               each[3] cu.zname as [Curve Type],
-               each[4] n.ztime as [Node Time],
-               each[5] n.zlevel as [Node Temp],
-               each[6] e.zeventtitle AS Event,
-               each[7] e.zeventtime AS [Time of Event]
-               each[8] r.zfirstcrack as [First Crack]
-            """
+            date = date.format('YYYY-MM-DD hh:mm')
 
             if not begun:
                 oldtime = date
@@ -300,26 +308,26 @@ def show_coffee_list():
             # turnaround_time = time.strftime("%M:%S", time.gmtime(each[3]))
             roast_duration = time.strftime("%M:%S", time.gmtime(each[1]))
             event_time = time.strftime("%M:%S", time.gmtime(each[7]))
-            if each[6] == 'Drying End':
-                dry_temp = each[7]
-                # print('Dry: ' + str(each[7]))
-            elif each[6] == 'Turnaround':
+            if each["Event"] == 'Drying End' or each["Event"] == 'Dry End':
+                dry_time = each["Time of Event"]
+                print('dry_time: ' + str(each["Time of Event"]))
+            elif each["Event"] == 'Turnaround':
                 turn_temp = each[7]
                 turn_temp = format_time(turn_temp)
             else:
-                print('Invalid Event Type')
-                exit()
-            dry_percent = get_phase_percent(0, dry_temp, each[1])
-            drying_stage = dry_temp
-            # dry_percent = '{:.1%}'.format(dry_temp/each[1])
+                print('Invalid Event Type '  + str(each["Event"]))
+                # exit()
+            dry_percent = get_phase_percent(0, dry_time, each["Roast Duration"])
+            drying_stage = dry_time
+            # dry_percent = '{:.1%}'.format(dry_time/each[1])
             # dry_percent = str(dry_percent) + '%'
             drying_stage = time.strftime("%M:%S", time.gmtime(drying_stage))
-            ramp_stage = each[8] - dry_temp
+            ramp_stage = each["First Crack"] - dry_time
             ramp_stage = time.strftime("%M:%S", time.gmtime(ramp_stage))
-            ramp_percent = get_phase_percent(dry_temp, each[8], each[1])
-            development = each[1] - each[8]
+            ramp_percent = get_phase_percent(dry_time, each["First Crack"], each["Roast Duration"])
+            development = each["Roast Duration"] - each["First Crack"]
             development = time.strftime("%M:%S", time.gmtime(development))
-            development_percent = get_phase_percent(each[8], each[1], each[1])
+            development_percent = get_phase_percent(each["First Crack"], each["Roast Duration"], each["Roast Duration"])
             # What Woofie wants
             # Charge, duration, dry time & %, ramp time & %, Development time & %, Roaster,
             # amount, bean
@@ -331,23 +339,11 @@ def show_coffee_list():
             #     each[3], int(each[4]), int(each[5]), each[6], event_time, turn_temp,
             # dry_percent))
 
-            """each[0] r.zdate AS Date,
-               each[1] r.zduration as [Roast Duration],
-               each[2] rd.zname as [Roast Degree],
-               each[3] cu.zname as [Curve Type],
-               each[4] n.ztime as [Node Time],
-               each[5] n.zlevel as [Node Temp],
-               each[6] e.zeventtitle AS Event,
-               each[7] e.zeventtime AS [Time of Event]
-               each[8] r.zfirstcrack as [First Crack]
-
-            """
-
             aline = (
                 "{0:}f, {1:}, {2:}-{3:} {4:}-{5:} {6:}-{7:}, {8:}, {9:}g, {10:}  ----{11:}".format(
-                    int(each[5]), roast_duration,
+                    int(each["Node Temp"]), roast_duration,
                     drying_stage, dry_percent, ramp_stage, ramp_percent, development,
-                    development_percent, each[9], each[10], each[12], date))
+                    development_percent, each["Roaster Make"], each["Charge Weight"], each["Country"], date))
             if date != oldtime:
                 roast.append(previous_roast)
                 previous_roast = aline
