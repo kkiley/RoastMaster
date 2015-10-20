@@ -78,13 +78,7 @@ def create_report():
 
     source_file_name = "d:/Development/RoastMaster/temp.txt"
     pdf_file_name = tempfile.mktemp(".pdf")
-    # pdf_file_name = "kor coffee menuf"
-    # stylesheet = getSampleStyleSheet()
-    # h1 = stylesheet["Heading1"]
-    # styleFS = stylesheet["Heading3"]
-    # normal = stylesheet["Normal"]
-    # font12 = stylesheet['fontSize':12]
-    width, height = letter
+    # width, height = letter
 
     doc = SimpleDocTemplate(pdf_file_name, pagesize=letter,
                             fontName='Times-Roman', fontSize=10)
@@ -110,10 +104,6 @@ def create_report():
         story.append(Spacer(.5, 0.1 * inch))
 
     doc.build(story)
-    # win32api.ShellExecute(0, "print", pdf_file_name, None, ".", 0)
-    # subprocess.call(
-    #     ['C:\Program Files (x86)\Adobe\Reader 11.0\Reader\AcroRD32.exe',
-    #      pdf_file_name])
     subprocess.call(['write.exe', source_file_name])
 
 
@@ -168,7 +158,6 @@ def check_db(mydb):
 
 def get_date(time_now, dateFormat="%d-%m-%Y", addDays=0):
     time_now = datetime.now()
-    # print("time_now: ", time_now)
     if (addDays != 0):
         anotherTime = time_now + timedelta(days=addDays)
     else:
@@ -189,7 +178,8 @@ def format_time(target_time):
 def show_coffee_list():
     con = lite.connect('D:/development/roastmaster/roast_master.db')
     f = open('temp.txt', "w")
-    time_span = -30
+    time_span = -15
+
     unix_epoch = '2001-01-01 00:00:00'
     time_interval = arrow.now()
     time_interval = time_interval.replace(years=0, days=time_span, hours=-5)
@@ -243,7 +233,6 @@ def show_coffee_list():
         previous_roast = ''
         roast = []
         oldtime = ''
-        # new_time = False
         begun = False
 
         cur.execute(sql, (time_interval, unix_epoch))
@@ -259,19 +248,7 @@ def show_coffee_list():
                                                                col_names[3], col_names[4],
                                                                col_names[5], col_names[6],
                                                                col_names[7])
-        # f.write(aline + '\n')
 
-        print(
-            "0: {0:<17} 1: {1:15} 2: {2:13} 3: {3:16} 4: {4:10} 5: {5:10} 6: {6:11} 7: {7:} 8: {8:}"
-            "9: {9:}, 10: {10:} 11: {11:}".format(col_names[0],
-                                                                           col_names[1],
-                                                                           col_names[2],
-                                                                           col_names[3],
-                                                                           col_names[4],
-                                                                           col_names[5],
-                                                                           col_names[6],
-                                                                           col_names[7],
-                                        col_names[8], col_names[9], col_names[10], col_names[11]))
 
         print('_' * 140)
         aline = '_' * 40
@@ -280,20 +257,6 @@ def show_coffee_list():
         dry_percent = 0.0
 
         for each in (cur.fetchall()):
-
-            # date = each[0]
-            # roast_duration = each[1]
-            # curve_type = each[2]
-            # node_time = each[3]
-            # node_temp = each[4]
-            # event = each[5]
-            # event_time = each[6]
-            # first_crack = each[7]
-            # roaster_brand = each[8]
-            # bean_amount = each[9]
-            # country_code = each[10]
-            # country = each[11]
-
 
             # UNIX epoch is 31 years and 1 day earlier than Code Data time
             # Format date():
@@ -305,9 +268,8 @@ def show_coffee_list():
                 oldtime = date
                 begun = True
 
-            # turnaround_time = time.strftime("%M:%S", time.gmtime(each[3]))
             roast_duration = time.strftime("%M:%S", time.gmtime(each[1]))
-            event_time = time.strftime("%M:%S", time.gmtime(each[7]))
+            # event_time = time.strftime("%M:%S", time.gmtime(each[7]))
             if each["Event"] == 'Drying End' or each["Event"] == 'Dry End':
                 dry_time = each["Time of Event"]
                 print('dry_time: ' + str(each["Time of Event"]))
@@ -316,7 +278,6 @@ def show_coffee_list():
                 turn_temp = format_time(turn_temp)
             else:
                 print('Invalid Event Type '  + str(each["Event"]))
-                # exit()
             dry_percent = get_phase_percent(0, dry_time, each["Roast Duration"])
             drying_stage = dry_time
             # dry_percent = '{:.1%}'.format(dry_time/each[1])
