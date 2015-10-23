@@ -1,109 +1,32 @@
 __author__ = 'Kor'
 
 """
-This program will read from the Roastmaster database and output a menu of the
-current roasts
+This program will read from the Roastmaster database and output data to a text file for
+Pusstoe to paste into roastmaster
 """
-
-# todo Create function to print output to a pdf
-# Todo Create function to print a temp pdf file
 
 import sqlite3 as lite
 import os
 import shutil
-from datetime import datetime, timedelta
-import tempfile
 import subprocess
 import time
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
 import arrow
 
-
-# import preppy
-# import trml2pdf
-# import rlextra
-# from rlextra import rml2pdf
-
 def create_report():
-    """ These are the default style properties for the paragraph class:
 
-    class ParagraphStyle(PropertySet):
-        defaults = {
-        'fontName':'Times-Roman',
-        'fontSize':10,
-        'leading':12,
-        'leftIndent':0,
-        'rightIndent':0,
-        'firstLineIndent':0,
-        'alignment':TA_LEFT,
-        'spaceBefore':0,
-        'spaceAfter':0,
-        'bulletFontName':'Times-Roman',
-        'bulletFontSize':10,
-        'bulletIndent':0,
-        'textColor': black,
-        'backColor':None,
-        'wordWrap':None,
-        'borderWidth': 0,
-        'borderPadding': 0,
-        'borderColor': None,
-        'borderRadius': None,
-        'allowWidows': 1,
-        'allowOrphans': 0,
-        }"""
-
-    styletitle1 = ParagraphStyle(
-        name='Normal',
-        leftIndent=14,
-        fontName='Times-Bold',
-        fontSize=18,
-        textColor='Black')
-
-    styletitle2 = ParagraphStyle(
-        name='Normal',
-        leftIndent=7,
-        fontName='Times-Bold',
-        fontSize=16,
-        textColor='Black')
-
-    styledata = ParagraphStyle(
-        name='Normal',
-        fontName='Times-Roman',
-        fontSize=12,
-        textColor='Black')
-
+    # source_file_name = "temp.txt"
     source_file_name = "d:/Development/RoastMaster/temp.txt"
-    pdf_file_name = tempfile.mktemp(".pdf")
-    # width, height = letter
-
-    doc = SimpleDocTemplate(pdf_file_name, pagesize=letter,
-                            fontName='Times-Roman', fontSize=10)
-    #
-    # reportlab expects to see XML-compliant
-    #  data; need to escape ampersands &c.
-    #
     text = (open(source_file_name).read()).splitlines()
 
-    #
-    # Take the first line of the document as a
-    #  header; the rest are treated as body text.
-    #
     story = []
-    story.append(Paragraph(text[0], styletitle1))
-    story.append(Spacer(.5, 0.1 * inch))
+    story.append(text[0])
 
-    story.append(Paragraph(text[1], styletitle2))
-    story.append(Spacer(.5, 0.1 * inch))
+    story.append(text[1])
 
     for line in text[2:]:
-        story.append(Paragraph(line, styledata))
-        story.append(Spacer(.5, 0.1 * inch))
+        story.append(line)
 
-    doc.build(story)
     subprocess.call(['write.exe', source_file_name])
 
 
@@ -123,13 +46,12 @@ def get_choice():
 
 def check_db(mydb):
     try:
-
-        metadata = os.stat(mydb)
+        metadata = os.stat(mydb) #check My Database.sqlite on dropbox
     except IOError:
         print("File does not exist. Correct the problem and restart.")
 
-    oldDB = metadata.st_mtime
-    metadata = os.stat('roast_master.db')
+    oldDB = metadata.st_mtime #get file date for dropbox file
+    metadata = os.stat('../roast_master.db')
     newDB = metadata.st_mtime
 
     if oldDB > newDB:
@@ -148,22 +70,13 @@ def check_db(mydb):
         elif choice == 1:
             return
         elif choice == 2:
-
+            # Woofie's dropbox is here: C:\Users\kiley_000\Dropbox\Apps\Roastmaster
+	    # Kor's dropbox is here: 'c:/users/kor/dropbox/apps/roastmaster/Kor Database.sqlite',
             shutil.copyfile(
                 'c:/users/kor/dropbox/apps/roastmaster/Kor Database.sqlite',
                 'd:/development/roastmaster/roast_master.db')
         else:
             print("Keeping current database")
-
-
-def get_date(time_now, dateFormat="%d-%m-%Y", addDays=0):
-    time_now = datetime.now()
-    if (addDays != 0):
-        anotherTime = time_now + timedelta(days=addDays)
-    else:
-        anotherTime = time_now
-
-    return anotherTime.strftime(dateFormat)
 
 
 def get_phase_percent(begin_time, end_time, roast_duration):
@@ -239,7 +152,6 @@ def show_coffee_list():
 
         aline = arrow.now().format('dddd MMMM D') + ' ' * 20 + "Data to paste in Roastmaster"
         f.write(aline + '\n\n')
-        print(aline)
 
         col_names = [cn[0] for cn in cur.description]
 
@@ -250,9 +162,6 @@ def show_coffee_list():
                                                                col_names[7])
 
 
-        print('_' * 140)
-        aline = '_' * 40
-        # f.write(aline + '\n')
         dry_time = 0.0
         dry_percent = 0.0
 
@@ -268,16 +177,13 @@ def show_coffee_list():
                 oldtime = date
                 begun = True
 
-            roast_duration = time.strftime("%M:%S", time.gmtime(each[1]))
-            # event_time = time.strftime("%M:%S", time.gmtime(each[7]))
+            roast_duration = time.strftime("%M:%S", time.gmtime(each["Roast Duration"]))
             if each["Event"] == 'Drying End' or each["Event"] == 'Dry End':
                 dry_time = each["Time of Event"]
-                print('dry_time: ' + str(each["Time of Event"]))
             elif each["Event"] == 'Turnaround':
                 turn_temp = each[7]
                 turn_temp = format_time(turn_temp)
-            else:
-                print('Invalid Event Type '  + str(each["Event"]))
+
             dry_percent = get_phase_percent(0, dry_time, each["Roast Duration"])
             drying_stage = dry_time
             # dry_percent = '{:.1%}'.format(dry_time/each[1])
@@ -294,11 +200,6 @@ def show_coffee_list():
             # amount, bean
             # 420f,   13:05,    4:47-40%      3:45-31%       3:31-29,              Huky,
             # 350g,   Kenya
-            # aline = (
-            #     "{0:<17} {1:15} {2:13} {3:16} {4:<10} {5:<10} {6:11} {7} {8} {9}".format(date,
-            #  roast_duration, each[2],
-            #     each[3], int(each[4]), int(each[5]), each[6], event_time, turn_temp,
-            # dry_percent))
 
             aline = (
                 "{0:}f, {1:}, {2:}-{3:} {4:}-{5:} {6:}-{7:}, {8:}, {9:}g, {10:}  ----{11:}".format(
@@ -312,21 +213,10 @@ def show_coffee_list():
 
             previous_roast = aline
 
-            # f.write(aline + '\n')
-            print(aline)
         roast.append(aline)
 
-        # print('Debug info:')
-        # print('-' * 50)
         for a_record in roast:
             f.write(a_record + '\n')
-
-        print('_' * 60)
-
-        aline = ('_' * 40)
-        # f.write(aline + '\n')
-        f.close()
-        f = open("temp.txt", "r")
 
         f.close()
 
