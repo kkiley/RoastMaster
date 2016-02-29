@@ -1,5 +1,3 @@
-# from PyQt5.QtWidgets import (QWidget, QLabel,
-#     QComboBox, QApplication, QMainWindow)
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
