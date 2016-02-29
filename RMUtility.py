@@ -1,0 +1,90 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'RMUtility.ui'
+#
+# Created by: PyQt5 UI code generator 5.5.1
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(388, 356)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.formLayout = QtWidgets.QFormLayout(self.centralwidget)
+        self.formLayout.setObjectName("formLayout")
+        self.Header_1 = QtWidgets.QLabel(self.centralwidget)
+        font = QtGui.QFont()
+        font.setFamily("Times New Roman")
+        font.setPointSize(14)
+        font.setBold(True)
+        font.setWeight(75)
+        self.Header_1.setFont(font)
+        self.Header_1.setObjectName("Header_1")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.Header_1)
+        self.coffeeButton = QtWidgets.QPushButton(self.centralwidget)
+        self.coffeeButton.setObjectName("coffeeButton")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.coffeeButton)
+        self.pasteDataButton = QtWidgets.QPushButton(self.centralwidget)
+        self.pasteDataButton.setObjectName("pasteDataButton")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.pasteDataButton)
+        self.coffeeComboBox = QtWidgets.QComboBox(self.centralwidget)
+        self.coffeeComboBox.setObjectName("coffeeComboBox")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.coffeeComboBox)
+        self.coffeeLabel = QtWidgets.QLabel(self.centralwidget)
+        self.coffeeLabel.setObjectName("coffeeLabel")
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.coffeeLabel)
+        self.pushButtonCheckMenu = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButtonCheckMenu.setObjectName("pushButtonCheckMenu")
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.pushButtonCheckMenu)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 388, 21))
+        self.menubar.setObjectName("menubar")
+        self.menuFile = QtWidgets.QMenu(self.menubar)
+        self.menuFile.setObjectName("menuFile")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+        self.actionQuit = QtWidgets.QAction(MainWindow)
+        self.actionQuit.setObjectName("actionQuit")
+        self.actionOpen_File = QtWidgets.QAction(MainWindow)
+        self.actionOpen_File.setObjectName("actionOpen_File")
+        self.actionMaximize = QtWidgets.QAction(MainWindow)
+        self.actionMaximize.setObjectName("actionMaximize")
+        self.actionMinimize = QtWidgets.QAction(MainWindow)
+        self.actionMinimize.setObjectName("actionMinimize")
+        self.menuFile.addAction(self.actionQuit)
+        self.menuFile.addAction(self.actionOpen_File)
+        self.menuFile.addAction(self.actionMaximize)
+        self.menuFile.addAction(self.actionMinimize)
+        self.menubar.addAction(self.menuFile.menuAction())
+
+        self.retranslateUi(MainWindow)
+        self.coffeeButton.clicked.connect(self.statusbar.show)
+        self.pasteDataButton.clicked.connect(self.statusbar.show)
+        self.actionQuit.triggered.connect(MainWindow.close)
+        self.actionMaximize.triggered.connect(MainWindow.showMaximized)
+        self.actionMinimize.triggered.connect(MainWindow.showMinimized)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "RoastMaster Utilities"))
+        self.Header_1.setText(_translate("MainWindow", "RoastMaster Utility"))
+        self.coffeeButton.setText(_translate("MainWindow", "Coffee Menu"))
+        self.pasteDataButton.setText(_translate("MainWindow", "Paste RM Data"))
+        self.coffeeLabel.setText(_translate("MainWindow", "Coffee Origin"))
+        self.pushButtonCheckMenu.setText(_translate("MainWindow", "Check Menu"))
+        self.menuFile.setTitle(_translate("MainWindow", "File"))
+        self.actionQuit.setText(_translate("MainWindow", "Exit"))
+        self.actionQuit.setToolTip(_translate("MainWindow", "Exit Now!"))
+        self.actionQuit.setShortcut(_translate("MainWindow", "Ctrl+Q"))
+        self.actionOpen_File.setText(_translate("MainWindow", "Open File"))
+        self.actionMaximize.setText(_translate("MainWindow", "Maximize"))
+        self.actionMinimize.setText(_translate("MainWindow", "Minimize"))
+
