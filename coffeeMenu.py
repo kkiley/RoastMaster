@@ -21,6 +21,7 @@ import arrow
 
 
 def create_report():
+    print("In create_report")
     """ These are the default style properties for the paragraph class:
 
     class ParagraphStyle(PropertySet):
@@ -50,33 +51,60 @@ def create_report():
 
     styletitle1 = ParagraphStyle(
         name='Normal',
+        leftIndent=50, # 28
+        fontName='Times-Bold',
+        fontSize=20,
+        textColor='Blue')
+
+    styletitle2 = ParagraphStyle(
+        name='Normal',
+        leftIndent=1, # 46
+        fontName='Times-Bold',
+        fontSize=17,
+        textColor='Green')
+
+    styletitle3 = ParagraphStyle(
+        name='Normal',
         leftIndent=14,
         fontName='Times-Bold',
         fontSize=18,
-        textColor='Black')
+        textColor='Red')
 
-    styletitle2 = ParagraphStyle(
+    styletitle4 = ParagraphStyle(
         name='Normal',
         leftIndent=7,
         fontName='Times-Bold',
         fontSize=16,
-        textColor='Black')
+        textColor='Green')
 
     styledata = ParagraphStyle(
         name='Normal',
         fontName='Times-Roman',
         fontSize=14,
+        textColor='Blue')
+
+    styledata1 = ParagraphStyle(
+        name='Normal',
+        fontName='Times-Roman',
+        fontSize=14,
         textColor='Black')
 
-    source_file_name = "d:/Development/RoastMaster/temp.txt"
+    styledata2 = ParagraphStyle(
+        name='Normal',
+        fontName='Times-Roman',
+        fontSize=14,
+        textColor='Red')
+
+    source_file_name = "temp.txt"
+    # source_file_name = "d:/Development/RoastMaster/temp.txt"
     # pdf_file_name = tempfile.mktemp(".pdf")
     pdf_file_name = "coffee menu.pdf"
     stylesheet = getSampleStyleSheet()
-    h1 = stylesheet["Heading1"]
-    styleFS = stylesheet["Heading3"]
-    normal = stylesheet["Normal"]
+    # h1 = stylesheet["Heading1"]
+    # styleFS = stylesheet["Heading3"]
+    # normal = stylesheet["Normal"]
     # font12 = stylesheet['fontSize':12]
-    width, height = letter
+    # width, height = letter
 
     doc = SimpleDocTemplate(pdf_file_name, pagesize=letter,
                             fontName='Times-Roman', fontSize=10)
@@ -85,25 +113,34 @@ def create_report():
     #  data; need to escape ampersands &c.
     #
     text = (open(source_file_name).read()).splitlines()
+    # for line in text:
+    #     print(line)
 
     #
     # Take the first line of the document as a
     #  header; the rest are treated as body text.
     #
-    story = []
-    story.append(Paragraph(text[0], styletitle1))
-    story.append(Spacer(.5, 0.1 * inch))
+    # print("Hello")
+    # print(text[0])
+    story = [Paragraph(text[0], styletitle1), Spacer(.5, 0.1 * inch),  Paragraph(text[1], styletitle2),
+             Paragraph(text[2], styledata1), Spacer(.5, 0.1 * inch)]
+    # num = 0
+    # for line in story:
+    #     print(num, line)
+    #     num += 1
 
-    story.append(Paragraph(text[1], styletitle2))
-    for line in text[2:]:
-        story.append(Paragraph(line, styledata))
+
+    for line in text[3:]:
+        story.append(Paragraph(line, styledata1))
         story.append(Spacer(.5, 0.1 * inch))
 
     doc.build(story)
     # win32api.ShellExecute(0, "print", pdf_file_name, None, ".", 0)
     subprocess.call(
-        ['C:\Program Files (x86)\Adobe\Reader 11.0\Reader\AcroRD32.exe',
-         pdf_file_name])
+        # ['C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRD32.exe'
+        # ['C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Acrobat Reader DC'
+        ['C:\Program Files\Tracker Software\PDF Editor\PDFXEdit.exe'
+        , pdf_file_name])
 
 
 def get_choice():
@@ -128,7 +165,7 @@ def check_db(mydb):
         print("File does not exist. Correct the problem and restart.")
 
     oldDB = metadata.st_mtime
-    metadata = os.stat('roast_master.db')
+    metadata = os.stat('../roast_master.db')
     newDB = metadata.st_mtime
 
     if oldDB > newDB:
@@ -150,7 +187,7 @@ def check_db(mydb):
 
             shutil.copyfile(
                 'c:/users/kor/dropbox/apps/roastmaster/Kor Database.sqlite',
-                'd:/development/roastmaster/roast_master.db')
+                '../roast_master.db')
         else:
             print("Keeping current database")
 
@@ -166,110 +203,143 @@ def get_date(time_now, dateFormat="%d-%m-%Y", addDays=0):
     return anotherTime.strftime(dateFormat)
 
 
-def show_coffee_list():
-    con = lite.connect('D:/development/roastmaster/roast_master.db')
+def show_coffee_list(debug):
+    # con = lite.connect('D:/development/roastmaster/roast_master.db')
+    # con = lite.connect('../roast_master.db')
+
+
+    print("In show_coffee_list")
+    con = lite.connect('../roast_master.db')
+    # con = lite.connect('D:/development/roastmaster/roast_master.db')
     f = open('temp.txt', "w")
+    time_span = -15
+
+    unix_epoch = '2001-01-01 00:00:00'
+    time_interval = arrow.now()
+    time_interval = time_interval.replace(years=0, days=time_span, hours=-5)
+    time_interval = time_interval.format('YYYY-MM-DD hh:mm:ss')
 
     with con:
-
-        # row_factory = lite.Row
+        con.row_factory = lite.Row
         cur = con.cursor()
-        # SELECT datetime( r.ZDATE, 'unixepoch', '31 YEARS', '+1 day',
-        # 'localtime' ) AS Date,
 
-        sql = """  Select
-                   r.ZDATE AS Date,
-                   b.ZMARKETNAME AS [Market Name],
-                   CASE
-                        WHEN b.zgrade IS NOT NULL THEN b.zgrade
-                        ELSE ''
-                   END AS Grade,
+        sql = """
+    SELECT r.zdate AS [Roast Date],
+           c.zname AS [Country of Origin],
+           b.zmarketname AS [Market Name]
+      FROM ZROAST r
+           JOIN
+           ZROASTEDITEM i ON i.ZROAST = r.Z_PK
+           JOIN
+           zbean b ON i.zbean = b.z_pk
+           JOIN
+           zcountry c ON b.zcountry = c.z_pk
+           LEFT JOIN
+           zdensity d ON b.zdensity = d.z_pk
+    WHERE r.zdate >=( strftime( '%s', ? )  - strftime( '%s', ? )  )
 
-                   ( CAST ( CAST ( r.ZDURATION / 60.0 AS int )  AS string )
-                   || ':' || CAST ( ZDURATION % 60 AS string )  ) AS Duration
-              FROM ((ZROAST r
-                    JOIN ZROASTEDITEM i  ON i.ZROAST = r.Z_PK)
+    AND     r.ZAGTRON = 1
+    ORDER BY r.zdate DESC;
+           """
+        previous_roast = ''
+        roast = []
+        oldtime = ''
 
-                       JOIN ZBEAN b
-                         ON i.ZBEAN = b.Z_PK
-                       JOIN zcountry c
-                         ON b.zcountry = c.z_pk
-            )
 
-             WHERE ZDATE >=( strftime( '%s', '2015-08-01 00:00:00 -05:00' )
-             - strftime( '%s', '2001-01-01 00:00:00' )  )
-                   AND
-                   r.zagtron = 1
+        # sql = """  Select
+        #            r.ZDATE AS Date,
+        #            b.ZMARKETNAME AS [Market Name],
+        #            CASE
+        #                 WHEN b.zgrade IS NOT NULL THEN b.zgrade
+        #                 ELSE ''
+        #            END AS Grade,
+        #
+        #            ( CAST ( CAST ( r.ZDURATION / 60.0 AS int )  AS string )
+        #            || ':' || CAST ( ZDURATION % 60 AS string )  ) AS Duration
+        #       FROM ((ZROAST r
+        #             JOIN ZROASTEDITEM i  ON i.ZROAST = r.Z_PK)
+        #
+        #                JOIN ZBEAN b
+        #                  ON i.ZBEAN = b.Z_PK
+        #                JOIN zcountry c
+        #                  ON b.zcountry = c.z_pk
+        #     )
+        #
+        #      WHERE ZDATE >=( strftime( '%s', '2015-08-01 00:00:00 -05:00' )
+        #      - strftime( '%s', '2001-01-01 00:00:00' )  )
+        #            AND
+        #            r.zagtron = 1
+        #
+        #      ORDER BY ZDATE DESC;
+        #   """
 
-             ORDER BY ZDATE DESC;
-          """
+        # cur.execute(sql)
+        cur.execute(sql, (time_interval, unix_epoch))
 
-        cur.execute(sql)
-        report = []
-        aline = "Tubby's Specialty Coffee"
+        # report = []
+        aline = "Wuffy's Cafe"
+        # aline = "Tubby's Specialty Coffee"
         f.write(aline + '\n')
+        # aline =	'Menu for Christmas Day 2015'
         aline = 'Menu for ' + arrow.now().format('dddd MMMM D')
         f.write(aline + '\n')
-        print(aline)
-        report.append(aline)
+        # print(aline)
+        # report.append(aline)
 
+        # print('_' * 60)
+        aline = '_' * 47
+        f.write(aline + '\n')
+        # report.append(aline)
         col_names = [cn[0] for cn in cur.description]
+        # for name in col_names:
+        #     print(':' + name)
 
-
-
-        # print(
-        #     "{0:<19} {1:21}{2:15}{3}".format(col_names[0],
-        #                                      col_names[1], col_names[2],
-        #                                      col_names[3]))
-
-        print('_' * 60)
-        aline = '_' * 40
-        f.write(aline + '\n')
-        report.append(aline)
-        # for each in (cur.fetchall()):
-        #     for col in each:
-        #         if col == None:
-        #             col = 'None'
-        #
-        #         print("{:32}".format(col), end='')
-        #     print()
         for each in (cur.fetchall()):
-            # temp = each[1]
-            # temp = datetime.fromtimestamp(each[1] +
-            # epoch_delta.total_seconds())
-            temp = arrow.Arrow.fromtimestamp(each[0])
+            # UNIX epoch is 31 years and 1 day earlier than Code Data time
+            # Format date():
 
-            date = temp.replace(years=31)
-            date = date.format('MM/DD')
+            temp = arrow.Arrow.fromtimestamp(each["Roast Date"])
+
+            # 10/24/16 I'm not sure about days=0 below. Sometimes days=1 works but
+            # I changed to days=0 because the date was 1 day ahead
+            date = temp.replace(years=31, days=0)
+            date = date.format('MM/DD/YY hh:mm')
+
+            pdate = temp.replace(years=31, days=0)
+            pdate = pdate.format('MM/DD')
+
+            # print(pdate)
+
             # if debug:
-            #     print("Date: ", type(date))
-            #
-            #     print("The Date: ", date)
+            #     print(
+            #         "{0:26}  {1:26}{2:15}{3}".format(each["Country of Origin"], each["Roast Date"], each["Market Name"]))
+            # else:
+            aline = (
+                " {1:20} {2} - {3}".format(each["Country of Origin"], each["Market Name"], '    ',
+                                                  pdate))
+            # print(aline)
+            if date != oldtime:
+                roast.append(previous_roast)
+                previous_roast = aline
+                oldtime = date
 
-            # temp2 = datetime.strptime("Tue Aug 25 16:02:44 2015", "%a %b %d
-            #  %H:%M:%S %Y")
-            # temp2 = datetime.strptime(date, "%a %b %d %H:%M:%S %Y")
-            # temp3 = temp2.strftime("%a %b %d")
-            # temp4 = temp2.strftime("%a %b %d")
+            previous_roast = aline
 
-            if debug:
-                print(
-                    "{0:26}  {1:26}{2:15}{3}".format(each[1], each[0], each[2],
-                                                     each[3]))
-            else:
-                aline = (
-                    "{0:19} {1:20} {2} -- {3}".format(each[1], each[2], '    ',
-                                                      date))
-                f.write(aline + '\n')
-                report.append(aline)
-                print(aline)
-                # print(
-                #     "{0:19} {1:10} {2}".format(date, each[1], each[2]))
+        roast.append(aline)
 
-        print('_' * 60)
-        aline = ('_' * 40)
-        report.append(aline)
-        f.write(aline + '\n')
+        for a_record in roast:
+            f.write(a_record + '\n')
+            # print(a_record)
+            # report.append(aline)
+
+            # f.write(aline + '\n')
+            # report.append(aline)
+            # print(aline)
+
+        # print('_' * 60)
+        # aline = ('_' * 47)
+        # report.append(aline)
+        # f.write(aline + '\n')
         f.close()
         f = open("temp.txt", "r")
 
@@ -277,9 +347,11 @@ def show_coffee_list():
 
         # create_report(report)
 
+if __name__ == '__main__':
 
-debug = False
-roastmaster_db = 'c:/users/kor/dropbox/apps/roastmaster/Kor Database.sqlite'
-check_db(roastmaster_db)
-show_coffee_list()
-create_report()
+    debug = False
+    roastmaster_db = 'C:/Users/kor/Dropbox/Apps/Roastmaster/Kor Database.sqlite'
+    # roastmaster_db = 'c:/users/kor/dropbox/apps/roastmaster/Kor Database.sqlite'
+    check_db(roastmaster_db)
+    show_coffee_list(debug)
+    create_report()
